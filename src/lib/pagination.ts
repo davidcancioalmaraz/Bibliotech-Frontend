@@ -1,4 +1,4 @@
-/** Page sizes offered by the three list views. */
+/** Page sizes shared by the paginated list views. */
 export const PAGE_SIZE_OPTIONS = [5, 10, 20] as const
 export const DEFAULT_PAGE_SIZE = PAGE_SIZE_OPTIONS[0]
 

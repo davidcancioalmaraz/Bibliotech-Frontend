@@ -8,7 +8,7 @@ import { PAGE_SIZE_OPTIONS, parsePageSize } from '@/lib/pagination'
 import type { PaginationMeta } from '@/lib/types'
 
 /**
- * Page controls for the three list endpoints. They take `page` and `limit` and
+ * Page controls for the paginated list endpoints. They take `page` and `limit` and
  * nothing else — there is no sorting or filtering to preserve in the URL.
  */
 export function Pagination({ meta, basePath }: { meta: PaginationMeta; basePath: string }) {

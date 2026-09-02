@@ -4,11 +4,11 @@ export const TOKEN_COOKIE = 'bt_token'
 export const USER_COOKIE = 'bt_user'
 
 /**
- * Where a role lands after logging in. A member can only read `/books`, so the
- * dashboard would be a redirect the moment they arrived.
+ * Where a role lands after logging in. Members start with their own open loans;
+ * the admin dashboard still summarises the whole library.
  */
 export function homePathFor(role: UserRole): string {
-  return role === 'admin' ? '/dashboard' : '/books'
+  return role === 'admin' ? '/dashboard' : '/my-loans'
 }
 
 /**
