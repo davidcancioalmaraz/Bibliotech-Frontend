@@ -4,8 +4,9 @@ import { DEFAULT_PAGE_SIZE } from './pagination'
 import { getToken } from './session'
 import type { Paginated } from './types'
 
-/** No global prefix on the API: routes are `/auth/login`, `/books`, `/loans`. */
-const API_URL = process.env.API_URL ?? 'http://localhost:3000'
+/** The backend exposes every controller through its versioned global prefix. */
+const API_URL = (process.env.API_URL ?? 'http://localhost:3000').replace(/\/+$/, '')
+const API_PREFIX = '/api/v1'
 
 /** `limit` is capped at 100 by the backend's `PaginationQueryDto`. */
 export const MAX_PAGE_SIZE = 100
@@ -78,7 +79,7 @@ export async function apiFetch<T>(
     headers.Authorization = `Bearer ${token}`
   }
 
-  const response = await fetch(`${API_URL}${path}`, {
+  const response = await fetch(`${API_URL}${API_PREFIX}${path}`, {
     method,
     headers,
     body: body === undefined ? undefined : JSON.stringify(body),

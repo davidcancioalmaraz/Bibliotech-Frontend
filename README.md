@@ -41,8 +41,10 @@ npm run dev
 
 The app listens on **http://localhost:3001** — the API already owns 3000.
 
-`API_URL` is the only setting. It is read on the server only: the browser never
-talks to the API directly, so the token never leaves the cookie.
+`API_URL` is the only setting and represents the API origin (for example,
+`http://localhost:3000`). The client adds the versioned `/api/v1` prefix to
+every request. It is read on the server only: the browser never talks to the API
+directly, so the token never leaves the cookie.
 
 Seeded accounts all share the password `Bibliotech123`:
 
