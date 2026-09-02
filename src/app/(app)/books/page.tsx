@@ -5,8 +5,9 @@ import { BooksTable } from '@/components/books/BooksTable'
 import { DisabledFilters } from '@/components/ui/DisabledFilters'
 import { Pagination } from '@/components/ui/Pagination'
 import { Panel, SectionHeader } from '@/components/ui/Panel'
-import { getPaginated, parsePage } from '@/lib/api'
+import { getPaginated } from '@/lib/api'
 import { requireSession } from '@/lib/dal'
+import { parsePage, parsePageSize } from '@/lib/pagination'
 import type { Book } from '@/lib/types'
 
 export const metadata: Metadata = { title: 'BiblioTech — Libros' }
@@ -14,8 +15,10 @@ export const metadata: Metadata = { title: 'BiblioTech — Libros' }
 /** The one section a member can reach, in read-only form. */
 export default async function BooksPage({ searchParams }: PageProps<'/books'>) {
   const user = await requireSession()
-  const page = parsePage((await searchParams).page)
-  const { data, meta } = await getPaginated<Book>('/books', { page })
+  const query = await searchParams
+  const page = parsePage(query.page)
+  const limit = parsePageSize(query.limit)
+  const { data, meta } = await getPaginated<Book>('/books', { page, limit })
 
   const canManage = user.role === 'admin'
 

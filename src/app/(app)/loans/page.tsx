@@ -5,16 +5,19 @@ import { LoansTable } from '@/components/loans/LoansTable'
 import { DisabledFilters } from '@/components/ui/DisabledFilters'
 import { Pagination } from '@/components/ui/Pagination'
 import { Panel, SectionHeader } from '@/components/ui/Panel'
-import { getPaginated, parsePage } from '@/lib/api'
+import { getPaginated } from '@/lib/api'
 import { requireAdmin } from '@/lib/dal'
+import { parsePage, parsePageSize } from '@/lib/pagination'
 import type { Loan } from '@/lib/types'
 
 export const metadata: Metadata = { title: 'BiblioTech — Préstamos' }
 
 export default async function LoansPage({ searchParams }: PageProps<'/loans'>) {
   await requireAdmin()
-  const page = parsePage((await searchParams).page)
-  const { data, meta } = await getPaginated<Loan>('/loans', { page })
+  const query = await searchParams
+  const page = parsePage(query.page)
+  const limit = parsePageSize(query.limit)
+  const { data, meta } = await getPaginated<Loan>('/loans', { page, limit })
 
   return (
     <>

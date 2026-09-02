@@ -5,16 +5,19 @@ import { DisabledFilters } from '@/components/ui/DisabledFilters'
 import { Pagination } from '@/components/ui/Pagination'
 import { Panel, SectionHeader } from '@/components/ui/Panel'
 import { UsersTable } from '@/components/users/UsersTable'
-import { getPaginated, parsePage } from '@/lib/api'
+import { getPaginated } from '@/lib/api'
 import { requireAdmin } from '@/lib/dal'
+import { parsePage, parsePageSize } from '@/lib/pagination'
 import type { User } from '@/lib/types'
 
 export const metadata: Metadata = { title: 'BiblioTech — Usuarios' }
 
 export default async function UsersPage({ searchParams }: PageProps<'/users'>) {
   const admin = await requireAdmin()
-  const page = parsePage((await searchParams).page)
-  const { data, meta } = await getPaginated<User>('/users', { page })
+  const query = await searchParams
+  const page = parsePage(query.page)
+  const limit = parsePageSize(query.limit)
+  const { data, meta } = await getPaginated<User>('/users', { page, limit })
 
   return (
     <>

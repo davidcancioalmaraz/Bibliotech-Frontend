@@ -1,5 +1,6 @@
 import { redirect } from 'next/navigation'
 
+import { DEFAULT_PAGE_SIZE } from './pagination'
 import { getToken } from './session'
 import type { Paginated } from './types'
 
@@ -8,7 +9,6 @@ const API_URL = process.env.API_URL ?? 'http://localhost:3000'
 
 /** `limit` is capped at 100 by the backend's `PaginationQueryDto`. */
 export const MAX_PAGE_SIZE = 100
-export const PAGE_SIZE = 20
 
 /**
  * A response the API refused. `messages` is always an array: Nest answers with
@@ -49,6 +49,11 @@ interface ApiFetchOptions {
    * bearer token and bounces the visitor out when the API rejects it.
    */
   anonymous?: boolean
+}
+
+interface PaginationOptions {
+  page?: number
+  limit?: number
 }
 
 /**
@@ -97,7 +102,7 @@ export async function apiFetch<T>(
 
 export async function getPaginated<T>(
   path: string,
-  { page = 1, limit = PAGE_SIZE } = {},
+  { page = 1, limit = DEFAULT_PAGE_SIZE }: PaginationOptions = {},
 ): Promise<Paginated<T>> {
   // Anything beyond `page` and `limit` answers 400: the global ValidationPipe
   // runs with `forbidNonWhitelisted`.
@@ -119,11 +124,4 @@ export async function fetchAllPages<T>(path: string): Promise<T[]> {
     if (!meta.hasNextPage) return rows
     page += 1
   }
-}
-
-/** Clamps a `?page=` search param to something the API will accept. */
-export function parsePage(value: string | string[] | undefined): number {
-  const raw = Array.isArray(value) ? value[0] : value
-  const page = Number(raw)
-  return Number.isInteger(page) && page >= 1 ? page : 1
 }
