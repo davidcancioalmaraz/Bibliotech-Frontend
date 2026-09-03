@@ -41,8 +41,10 @@ npm run dev
 
 The app listens on **http://localhost:3001** — the API already owns 3000.
 
-`API_URL` is the only setting. It is read on the server only: the browser never
-talks to the API directly, so the token never leaves the cookie.
+`API_URL` is the only setting and represents the API origin (for example,
+`http://localhost:3000`). The client adds the versioned `/api/v1` prefix to
+every request. It is read on the server only: the browser never talks to the API
+directly, so the token never leaves the cookie.
 
 Seeded accounts all share the password `Bibliotech123`:
 
@@ -132,3 +134,26 @@ npm run build
 npm run start   # http://localhost:3001
 npm run lint
 ```
+
+## Docker
+
+The frontend image uses a three-stage production build and runs the standalone
+Next.js server under PM2. Start it with:
+
+```shell
+docker compose up -d
+```
+
+The app is available at **http://localhost:3001**. The backend must already be
+running and publishing port 3000 on the host; Docker resolves it through
+`host.docker.internal` (including on Linux).
+
+The host port and API origin can be overridden without editing the Compose
+file:
+
+```shell
+FRONTEND_PORT=8080 API_URL=http://host.docker.internal:4000 docker compose up -d
+```
+
+Use `docker compose logs -f bibliotech-frontend` to follow the application logs
+and `docker compose down` to stop the container.

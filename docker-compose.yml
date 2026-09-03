@@ -1,0 +1,23 @@
+services:
+  bibliotech-frontend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: bibliotech-frontend
+    restart: always
+    ports:
+      - "${FRONTEND_PORT:-3001}:3001"
+    environment:
+      API_URL: "${API_URL:-http://host.docker.internal:3000}"
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    healthcheck:
+      test:
+        - CMD
+        - node
+        - -e
+        - "fetch('http://127.0.0.1:3001/login').then(response => process.exit(response.ok ? 0 : 1)).catch(() => process.exit(1))"
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 15s
