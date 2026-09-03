@@ -1,36 +1,159 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# BiblioTech Frontend
 
-## Getting Started
+Front-end for the BiblioTech library, on top of the NestJS API in
+`../bibliotech_backend`. It is the static HTML/CSS prototype from `../../task-01`
+ported to the App Router and wired to a real backend: the six mockup pages become
+routes, the duplicated page shell becomes a layout, and the hard-coded tables
+become paginated data.
 
-First, run the development server:
+## Stack
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+| Layer    | Choice                                             |
+|----------|----------------------------------------------------|
+| Framework| Next.js 16 (App Router, Turbopack, React 19)       |
+| Language | TypeScript 5                                       |
+| Styling  | One hand-written global stylesheet, no framework   |
+| Data     | Server Components + Server Actions over `fetch`    |
+| Session  | JWT from the API, kept in httpOnly cookies         |
+
+No runtime dependencies beyond Next and React: no Tailwind, no form library, no
+HTTP client.
+
+## Requirements
+
+The API must be running on `http://localhost:3000` with its database migrated
+and seeded. From `../bibliotech_backend`:
+
+```shell
+docker compose up -d database
+npm run migration:run
+npm run seed
+npm run start:dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## Getting started
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+```shell
+cp .env.example .env.local
+npm install
+npm run dev
+```
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+The app listens on **http://localhost:3001** — the API already owns 3000.
 
-## Learn More
+`API_URL` is the only setting and represents the API origin (for example,
+`http://localhost:3000`). The client adds the versioned `/api/v1` prefix to
+every request. It is read on the server only: the browser never talks to the API
+directly, so the token never leaves the cookie.
 
-To learn more about Next.js, take a look at the following resources:
+Seeded accounts all share the password `Bibliotech123`:
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+| Account                    | Role   | Sees                          |
+|----------------------------|--------|-------------------------------|
+| `admin@bibliotech.test`    | admin  | Everything                    |
+| `marcos@bibliotech.test`   | member | Own open loans and catalogue  |
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## Project structure
 
-## Deploy on Vercel
+```
+src/
+  proxy.ts            Route and role gate (Next 16's renamed middleware)
+  lib/
+    api.ts            apiFetch, pagination helpers, ApiError
+    session.ts        The httpOnly cookies
+    session-cookie.ts The pure half, shared with proxy.ts
+    dal.ts            requireSession / requireAdmin
+    domain.ts         Derived loan status, date formatting, Spanish labels
+    types.ts          The shapes the API answers with
+  actions/            Server Actions, one file per entity
+  components/         shell/ ui/ books/ loans/ users/
+  app/
+    (auth)/login      Outside the shell
+    (app)/            Everything behind the sidebar
+    logout/route.ts   Clears the session
+```
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+## Authorization
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+Three gates, deliberately:
+
+1. **`proxy.ts`** reads the session cookie and redirects — an optimistic check,
+   which is all a proxy should do since it also runs on prefetches.
+2. **`requireSession()` / `requireAdmin()`** run in every page *and every Server
+   Action*, because a Server Function is reachable by a direct POST.
+3. **The API**, which answers 401 and 403 regardless of what the UI allowed.
+
+The rules mirror the backend's guards exactly:
+
+| Section       | admin   | member    |
+|---------------|---------|-----------|
+| `/my-loans`   | own     | own       |
+| `/books`      | CRUD    | read-only |
+| `/loans`      | CRUD    | no access |
+| `/users`      | CRUD    | no access |
+| `/dashboard`  | yes     | no access |
+
+A member lands on `/my-loans`, sees *Mis préstamos* and *Libros* in the sidebar,
+and gets no management controls. An expired token sends the visitor through
+`/logout`, which is the one place cookies can be cleared, back to the login form.
+
+## What is deliberately inert
+
+The API has no searching, no filtering and no counters, and its `ValidationPipe`
+runs with `forbidNonWhitelisted`, so an invented query parameter answers 400
+rather than being ignored. Rather than drop the mockup's chrome, these are kept
+visible and disabled, and marked as such:
+
+- the **filter bar** on the management lists — only `page` and `limit` reach the API;
+- **Recordarme** on the login form — the token lasts a day and there is no
+  refresh endpoint;
+- the **Préstamos vencidos** metric — the other three counters are real, read
+  from the `meta.total` every list endpoint reports.
+
+Overdue is computed in the browser from `returnedAt` and `dueDate`; it is not a
+column the API stores.
+
+## Notable API rules the UI enforces
+
+- A loan takes a `bookId` and a `userId`, so both are selects, narrowed to
+  copies that are `available` and accounts that are `isActive`.
+- `code` and `dueDate` never appear in a form: the server generates the first
+  and derives the second from `loanedAt` plus a term of 14, 21 or 30 days.
+- A loan never moves to another book or borrower — editing one only shifts its
+  dates, and a returned loan cannot be edited at all.
+- `on-loan` is owned by `/loans`: the book form offers only *Disponible* and
+  *En reparación*.
+- Books and users with loans on record cannot be deleted. The 409 is shown next
+  to the row rather than swallowed; deactivating a user is the alternative.
+
+## Scripts
+
+```shell
+npm run dev     # http://localhost:3001
+npm run build
+npm run start   # http://localhost:3001
+npm run lint
+```
+
+## Docker
+
+The frontend image uses a three-stage production build and runs the standalone
+Next.js server under PM2. Start it with:
+
+```shell
+docker compose up -d
+```
+
+The app is available at **http://localhost:3001**. The backend must already be
+running and publishing port 3000 on the host; Docker resolves it through
+`host.docker.internal` (including on Linux).
+
+The host port and API origin can be overridden without editing the Compose
+file:
+
+```shell
+FRONTEND_PORT=8080 API_URL=http://host.docker.internal:4000 docker compose up -d
+```
+
+Use `docker compose logs -f bibliotech-frontend` to follow the application logs
+and `docker compose down` to stop the container.
