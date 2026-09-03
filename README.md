@@ -49,7 +49,7 @@ Seeded accounts all share the password `Bibliotech123`:
 | Account                    | Role   | Sees                          |
 |----------------------------|--------|-------------------------------|
 | `admin@bibliotech.test`    | admin  | Everything                    |
-| `marcos@bibliotech.test`   | member | The catalogue, read-only      |
+| `marcos@bibliotech.test`   | member | Own open loans and catalogue  |
 
 ## Project structure
 
@@ -83,16 +83,17 @@ Three gates, deliberately:
 
 The rules mirror the backend's guards exactly:
 
-| Section     | admin | member    |
-|-------------|-------|-----------|
-| `/books`    | CRUD  | read-only |
-| `/loans`    | CRUD  | no access |
-| `/users`    | CRUD  | no access |
-| `/dashboard`| yes   | no access |
+| Section       | admin   | member    |
+|---------------|---------|-----------|
+| `/my-loans`   | own     | own       |
+| `/books`      | CRUD    | read-only |
+| `/loans`      | CRUD    | no access |
+| `/users`      | CRUD    | no access |
+| `/dashboard`  | yes     | no access |
 
-A member lands on `/books`, sees only *Libros* in the sidebar and gets no
-management controls. An expired token sends the visitor through `/logout`, which
-is the one place cookies can be cleared, back to the login form.
+A member lands on `/my-loans`, sees *Mis préstamos* and *Libros* in the sidebar,
+and gets no management controls. An expired token sends the visitor through
+`/logout`, which is the one place cookies can be cleared, back to the login form.
 
 ## What is deliberately inert
 
@@ -101,7 +102,7 @@ runs with `forbidNonWhitelisted`, so an invented query parameter answers 400
 rather than being ignored. Rather than drop the mockup's chrome, these are kept
 visible and disabled, and marked as such:
 
-- the **filter bar** on every list — only `page` and `limit` reach the API;
+- the **filter bar** on the management lists — only `page` and `limit` reach the API;
 - **Recordarme** on the login form — the token lasts a day and there is no
   refresh endpoint;
 - the **Préstamos vencidos** metric — the other three counters are real, read
