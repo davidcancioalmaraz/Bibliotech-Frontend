@@ -13,13 +13,14 @@ export interface NavItem {
  * disagree about what a route is called.
  *
  * `adminOnly` mirrors the backend: `/users` and `/loans` carry
- * `@Roles(UserRole.ADMIN)` on the controller, and the dashboard reads loans, so
- * a member has nothing to see in any of them.
+ * `@Roles(UserRole.ADMIN)` on the controller, and the dashboard reads loans.
+ * `/my-loans` is backed by `/loans/me`, which accepts any authenticated role.
  */
 export const NAV_ITEMS: NavItem[] = [
   { href: '/dashboard', label: 'Panel', title: 'Panel', adminOnly: true },
   { href: '/books', label: 'Libros', title: 'Libros', adminOnly: false },
   { href: '/loans', label: 'Préstamos', title: 'Préstamos', adminOnly: true },
+  { href: '/my-loans', label: 'Mis préstamos', title: 'Mis préstamos', adminOnly: false },
   { href: '/users', label: 'Usuarios', title: 'Usuarios', adminOnly: true },
 ]
 
