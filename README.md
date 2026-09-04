@@ -1,7 +1,6 @@
 # BiblioTech Frontend
 
-Front-end for the BiblioTech library, on top of the NestJS API in
-`../bibliotech_backend`. It is the static HTML/CSS prototype from `../../task-01`
+Front-end for the BiblioTech library. It is the static HTML/CSS prototype from Task 1
 ported to the App Router and wired to a real backend: the six mockup pages become
 routes, the duplicated page shell becomes a layout, and the hard-coded tables
 become paginated data.
@@ -18,18 +17,6 @@ become paginated data.
 
 No runtime dependencies beyond Next and React: no Tailwind, no form library, no
 HTTP client.
-
-## Requirements
-
-The API must be running on `http://localhost:3000` with its database migrated
-and seeded. From `../bibliotech_backend`:
-
-```shell
-docker compose up -d database
-npm run migration:run
-npm run seed
-npm run start:dev
-```
 
 ## Getting started
 
